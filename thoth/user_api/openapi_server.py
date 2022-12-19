@@ -31,6 +31,7 @@ from connexion.resolver import RestyResolver
 from flask import redirect, jsonify, request, make_response, abort
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
+from flask_graphql import GraphQLView
 
 
 from thoth.common import __version__ as __common__version__
@@ -42,6 +43,8 @@ from thoth.messaging import __version__ as __messaging__version__
 import thoth.messaging.producer as producer
 from thoth.storages import GraphDatabase
 from thoth.storages.exceptions import DatabaseNotInitializedError
+from thoth.storages.graph.schema import schema
+
 from thoth.user_api import __version__
 from thoth.user_api.configuration import Configuration
 from thoth.user_api.metrics import MetricsValues
@@ -220,6 +223,15 @@ def _list_registered_paths() -> List[str]:
 def api_v1():
     """Provide a listing of all available endpoints."""
     return jsonify({"paths": _list_registered_paths()})
+
+app.add_url_rule(
+    '/graphql',
+    view_func=GraphQLView.as_view(
+        'graphql',
+        schema=schema,
+        graphiql=True,
+    )
+)
 
 
 def _healthiness():
